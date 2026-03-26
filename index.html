@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculateur de Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f4f6f9;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #1a1a2e;
+    min-height: 100vh;
+    padding: 36px 20px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #999;
+    font-size: 0.78rem;
+    margin-bottom: 24px;
+  }
+
+  .container { max-width: 980px; margin: 0 auto; }
+
+  /* ── Moyenne banner ── */
+  .avg-banner {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e2e6ee;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .avg-left { display: flex; align-items: baseline; gap: 12px; }
+
+  .avg-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #5b8af0;
+  }
+
+  .avg-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .avg-value.great { color: #16a34a; }
+  .avg-value.ok    { color: #d97706; }
+  .avg-value.poor  { color: #dc2626; }
+  .avg-value.none  { color: #ccc; font-size: 1.4rem; }
+
+  .avg-mention {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #888;
+    background: #f4f6f9;
+    border: 1px solid #e2e6ee;
+    border-radius: 20px;
+    padding: 4px 14px;
+  }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e2e6ee;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    background: #5b8af0;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 14px;
+    text-align: left;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #edf0f5;
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbff; }
+
+  td { padding: 8px 12px; vertical-align: middle; }
+
+  col.c-matiere { width: 30%; }
+  col.c-coeff   { width: 72px; }
+  col.c-notes   { }
+  col.c-moy     { width: 76px; }
+  col.c-del     { width: 36px; }
+
+  /* ── Inputs ── */
+  input[type="text"],
+  input[type="number"] {
+    border: 1px solid #dde1eb;
+    border-radius: 6px;
+    background: #f9fafc;
+    color: #1a1a2e;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    padding: 6px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus {
+    border-color: #5b8af0;
+    box-shadow: 0 0 0 3px rgba(91,138,240,0.1);
+    background: #fff;
+  }
+  input::placeholder { color: #c0c5d0; }
+  td:nth-child(2) input { text-align: center; }
+
+  /* ── Notes cell ── */
+  .notes-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .note-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #eef2ff;
+    border: 1px solid #c7d4fb;
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #3b5fd6;
+    animation: rowIn 0.15s ease;
+  }
+  .note-chip button {
+    background: none; border: none;
+    color: #9aaad8; cursor: pointer;
+    font-size: 0.68rem; padding: 0; line-height: 1;
+    transition: color 0.1s;
+  }
+  .note-chip button:hover { color: #dc2626; }
+
+  .note-add-wrap { display: flex; gap: 4px; align-items: center; }
+  .note-add-wrap input { width: 62px; padding: 5px 7px; font-size: 0.8rem; }
+
+  .btn-add-note {
+    background: #f0f4ff;
+    border: 1px solid #c7d4fb;
+    border-radius: 6px;
+    color: #5b8af0;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.73rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    white-space: nowrap;
+    transition: background 0.1s;
+  }
+  .btn-add-note:hover { background: #dde6ff; }
+
+  .toggle-mode {
+    background: none;
+    border: 1px solid #e2e6ee;
+    border-radius: 5px;
+    color: #bbb;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.68rem;
+    padding: 4px 8px;
+    white-space: nowrap;
+    transition: color 0.1s, border-color 0.1s;
+  }
+  .toggle-mode:hover { color: #5b8af0; border-color: #5b8af0; }
+
+  .avg-direct-wrap { display: flex; align-items: center; gap: 6px; }
+  .avg-direct-wrap input { width: 76px; }
+
+  /* ── Row average ── */
+  .row-avg {
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    color: #ccc;
+  }
+  .row-avg.great { color: #16a34a; }
+  .row-avg.ok    { color: #d97706; }
+  .row-avg.poor  { color: #dc2626; }
+
+  /* ── Delete ── */
+  .btn-delete {
+    background: none; border: none;
+    color: #d0d5e0; cursor: pointer;
+    font-size: 0.9rem; padding: 4px 6px;
+    border-radius: 5px; display: block; margin: auto;
+    transition: color 0.1s, background 0.1s;
+  }
+  .btn-delete:hover { color: #dc2626; background: #fff0f0; }
+
+  /* ── tfoot ── */
+  tfoot td {
+    background: #eef2ff;
+    border-top: 2px solid #c7d4fb;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #5b8af0;
+    padding: 11px 12px;
+  }
+  .foot-avg-val {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+  .foot-avg-val.great { color: #16a34a; }
+  .foot-avg-val.ok    { color: #d97706; }
+  .foot-avg-val.poor  { color: #dc2626; }
+
+  /* ── Actions ── */
+  .actions-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: #5b8af0;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, transform 0.1s;
+    box-shadow: 0 2px 8px rgba(91,138,240,0.22);
+  }
+  .btn-primary:hover { background: #4070e0; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: #fff;
+    border: 1px solid #dde1eb;
+    border-radius: 8px;
+    color: #999;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.1s, border-color 0.1s;
+  }
+  .btn-secondary:hover { color: #dc2626; border-color: #dc2626; }
+
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  tbody tr { animation: rowIn 0.2s ease; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Calculateur de Notes</h1>
+  <p class="subtitle">Entre tes notes ou ta moyenne directement · Les coefficients sont pris en compte</p>
+
+  <div class="avg-banner">
+    <div class="avg-left">
+      <span class="avg-label">Moyenne Générale</span>
+      <span class="avg-value none" id="avg-display">—</span>
+    </div>
+    <span class="avg-mention" id="avg-mention">En attente de notes</span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col class="c-matiere">
+        <col class="c-coeff">
+        <col class="c-notes">
+        <col class="c-moy">
+        <col class="c-del">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Disciplines</th>
+          <th>Coef.</th>
+          <th>Notes / Évaluations</th>
+          <th>Moy.</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" style="text-align:right">Moyenne Générale</td>
+          <td><span class="foot-avg-val" id="foot-avg">—</span></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="actions-bar">
+    <button class="btn-primary" onclick="addRow()">＋ Ajouter une matière</button>
+    <button class="btn-secondary" onclick="resetNotes()">↺ Effacer les notes</button>
+  </div>
+
+</div>
+
+<script>
+  let rows = [], nextId = 0;
+
+  function addRow(matiere = '', coeff = 1) {
+    const id = nextId++;
+    rows.push({ id, matiere, coeff, notes: [], directAvg: null, mode: 'notes' });
+    renderRows();
+    computeAverage();
+  }
+
+  function removeRow(id) {
+    rows = rows.filter(r => r.id !== id);
+    renderRows();
+    computeAverage();
+  }
+
+  function renderRows() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" placeholder="Nom de la matière (optionnel)" value="${esc(row.matiere)}"
+          oninput="updateField(${row.id},'matiere',this.value)"></td>
+        <td><input type="number" min="0" max="20" step="0.5" value="${row.coeff}"
+          oninput="updateField(${row.id},'coeff',this.value)"></td>
+        <td id="nc-${row.id}">${notesCell(row)}</td>
+        <td><span class="row-avg ${gc(rowAvg(row))}" id="ra-${row.id}">${fmt(rowAvg(row))}</span></td>
+        <td><button class="btn-delete" onclick="removeRow(${row.id})" title="Supprimer">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function notesCell(row) {
+    if (row.mode === 'avg') {
+      return `<div class="avg-direct-wrap">
+        <input type="number" min="0" max="20" step="0.01" placeholder="Ma moyenne"
+          value="${row.directAvg !== null ? row.directAvg : ''}"
+          oninput="updateField(${row.id},'directAvg',this.value)">
+        <button class="toggle-mode" onclick="toggleMode(${row.id})">+ Notes détaillées</button>
+      </div>`;
+    }
+    const chips = row.notes.map((n, i) =>
+      `<span class="note-chip">${n}<button onclick="removeNote(${row.id},${i})">✕</button></span>`
+    ).join('');
+    return `<div class="notes-cell">
+      ${chips}
+      <div class="note-add-wrap">
+        <input type="number" min="0" max="20" step="0.01" placeholder="/20" id="ni-${row.id}"
+          onkeydown="if(event.key==='Enter')addNote(${row.id})">
+        <button class="btn-add-note" onclick="addNote(${row.id})">+ Ajouter</button>
+      </div>
+      <button class="toggle-mode" onclick="toggleMode(${row.id})">Entrer la moyenne</button>
+    </div>`;
+  }
+
+  function toggleMode(id) {
+    const row = rows.find(r => r.id === id);
+    if (!row) return;
+    if (row.mode === 'notes') {
+      row.mode = 'avg';
+      row.directAvg = rowAvg(row);
+    } else {
+      row.mode = 'notes';
+      row.directAvg = null;
+    }
+    document.getElementById(`nc-${id}`).innerHTML = notesCell(row);
+    computeAverage();
+  }
+
+  function addNote(id) {
+    const inp = document.getElementById(`ni-${id}`);
+    if (!inp) return;
+    const v = parseFloat(inp.value);
+    if (isNaN(v) || v < 0 || v > 20) return;
+    rows.find(r => r.id === id).notes.push(+v.toFixed(2));
+    inp.value = '';
+    const row = rows.find(r => r.id === id);
+    document.getElementById(`nc-${id}`).innerHTML = notesCell(row);
+    refreshRow(id);
+  }
+
+  function removeNote(id, i) {
+    const row = rows.find(r => r.id === id);
+    row.notes.splice(i, 1);
+    document.getElementById(`nc-${id}`).innerHTML = notesCell(row);
+    refreshRow(id);
+  }
+
+  function updateField(id, field, val) {
+    const row = rows.find(r => r.id === id);
+    if (field === 'coeff') row.coeff = parseFloat(val) || 0;
+    else if (field === 'matiere') row.matiere = val;
+    else if (field === 'directAvg') row.directAvg = val === '' ? null : parseFloat(val);
+    refreshRow(id);
+  }
+
+  function refreshRow(id) {
+    const row = rows.find(r => r.id === id);
+    const el = document.getElementById(`ra-${id}`);
+    if (el) { const a = rowAvg(row); el.textContent = fmt(a); el.className = `row-avg ${gc(a)}`; }
+    computeAverage();
+  }
+
+  function rowAvg(row) {
+    if (row.mode === 'avg') return row.directAvg;
+    if (!row.notes.length) return null;
+    return +(row.notes.reduce((a, b) => a + b, 0) / row.notes.length).toFixed(2);
+  }
+
+  function computeAverage() {
+    let tw = 0, tc = 0;
+    rows.forEach(row => {
+      const a = rowAvg(row), c = row.coeff || 1;
+      if (a !== null && !isNaN(a)) { tw += a * c; tc += c; }
+    });
+    const el = document.getElementById('avg-display');
+    const men = document.getElementById('avg-mention');
+    const ft = document.getElementById('foot-avg');
+    if (!tc) {
+      el.textContent = '—'; el.className = 'avg-value none';
+      men.textContent = 'En attente de notes'; men.style.color = '';
+      ft.textContent = '—'; ft.className = 'foot-avg-val'; return;
+    }
+    const avg = +(tw / tc).toFixed(2);
+    const cls = gc(avg);
+    el.textContent = fmt(avg); el.className = `avg-value ${cls}`;
+    ft.textContent = fmt(avg); ft.className = `foot-avg-val ${cls}`;
+    const colors = { great: '#16a34a', ok: '#d97706', poor: '#dc2626', '': '#888' };
+    men.textContent = getMention(avg);
+    men.style.color = colors[cls] || '#888';
+  }
+
+  function getMention(a) {
+    if (a >= 18) return 'Félicitations 🏆';
+    if (a >= 16) return 'Très Bien';
+    if (a >= 14) return 'Bien';
+    if (a >= 12) return 'Assez Bien';
+    if (a >= 10) return 'Passable';
+    return 'Insuffisant';
+  }
+
+  function gc(a) {
+    if (a === null || a === undefined || isNaN(a)) return '';
+    return a >= 13 ? 'great' : a >= 10 ? 'ok' : 'poor';
+  }
+
+  function fmt(v) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return (+v).toFixed(2).replace('.', ',');
+  }
+
+  function esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  }
+
+  function resetNotes() {
+    if (confirm('Effacer toutes les notes (garder les matières) ?')) {
+      rows.forEach(r => { r.notes = []; r.directAvg = null; r.mode = 'notes'; });
+      renderRows(); computeAverage();
+    }
+  }
+
+  // Matières du bulletin, sans notes
+  const matieres = [
+    { matiere: 'CULT. GÈNE. EXPRESSION',              coeff: 2 },
+    { matiere: 'ANGLAIS LV1',                          coeff: 2 },
+    { matiere: "MATHÉMATIQUES POUR L'INFORMATIQUE",    coeff: 3 },
+    { matiere: "CEJM pour l'informatique",             coeff: 3 },
+    { matiere: 'Bloc 1 : SUP. DISPOS. SERV. INF.',    coeff: 4 },
+    { matiere: 'Bloc 2 : CONC. DEV. APPLIC.',         coeff: 4 },
+    { matiere: 'Bloc 3 : CYBERSÉCURITÉ',              coeff: 4 },
+    { matiere: 'AT. PROFESSIONNALIS.',                 coeff: 1 },
+  ];
+
+  matieres.forEach(m => addRow(m.matiere, m.coeff));
+</script>
+</body>
+</html>
